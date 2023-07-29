@@ -4,7 +4,7 @@
    "files": [
        {
            "name": "my_cool_code.py",
-           "content": ""
+           "content": "print(\"hello world\")"
        }
    ],
    "stdin": "",
