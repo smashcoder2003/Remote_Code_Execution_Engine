@@ -1,4 +1,5 @@
 const fs = require('fs').promises;
+const fs1 = require('fs');
 const {v4: uuidv4} = require('uuid');
 const path = require('path');
 const config = require('./config');
@@ -132,7 +133,7 @@ class Job {
 
 }
 async  function removeDirectoryRecursive(dirPath) {
-    if (fs.exis(dirPath)) {
+    if (fs1.existsSync(dirPath)) {
         const files = await fs.readdir(dirPath);
 
         for (const file of files) {
