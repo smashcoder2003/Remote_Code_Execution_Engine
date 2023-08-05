@@ -2,6 +2,7 @@
 
 build() {
   if docker images | grep -q "my_engine"; then
+    docker stop my_engine
     docker rm my_engine > /dev/null
   fi
   docker build -t my_engine -f "./builder/Dockerfile" . --no-cache
@@ -9,10 +10,10 @@ build() {
 
 start() {
   if docker ps -a | grep -aq "my_engine"; then
-    docker start  my_engine > /dev/null
-  else
-    docker run -d --name my_engine -p 2000:2000 my_engine > /dev/null
+    docker stop my_engine > /dev/null
+    docker rm my_engine > /dev/null
   fi
+    docker run -d --name my_engine -p 2000:2000 my_engine
 }
 
 stop() {

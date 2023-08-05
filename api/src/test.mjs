@@ -1,13 +1,31 @@
-import * as fs from 'fs/promises';
+import * as cp from "child_process";
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-let pth;
+
+
+let stdout="", stderr="";
+
 (async () => {
-    pth = await new Promise((resolve) => resolve(path.join(
-    "mydir1",
-    "piston/jobs",
-        uuidv4().toString()
-    )));
-    console.log(pth);
+    let result = await new Promise((resolve, reject) => {
+        let ps = cp.spawn("python3", ["./api/src/test.py"]);
+        ps.stdout.on('data', (data) => {
+            stdout += data;
+        });
+
+
+        ps.stderr.once('data', (data) => {
+            stderr += data.toString().replace(/File "(.*?)\/([^\/]+)",/, `${path.dirname(ps.spawnargs[1])},`);
+        });
+
+
+
+        ps.on('close', (code) => {
+            resolve({
+                stdout: stdout,
+                stderr: stderr,
+                exitCode: code,
+            });
+        });
+    });
+    console.log(result.stderr);
 })();
 

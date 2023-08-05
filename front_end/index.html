@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flexbox</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+<p class="first"> I am <strong>restarting</strong> html.</p>>
+<div class="button-container">
+    <button class="button" onclick="addRippleEffect(Event)">Login</button>
+</div>
+
+<script>
+    function addRippleEffect(Event) {
+        const button = Event.currentTarget;
+        const ripple = document.createElement("span");
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = Event.clientX - rect.left - size / 2;
+        const y = Event.clientY - rect.top - size / 2;
+
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+
+        ripple.classList.add("ripple");
+        button.appendChild(ripple);
+
+        ripple.addEventListener("animationend", () => {
+            button.removeChild(ripple);
+        });
+    }
+
+</script>
+</body>
+</html>
