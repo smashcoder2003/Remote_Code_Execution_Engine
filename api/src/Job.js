@@ -6,7 +6,7 @@ const config = require('./config');
 const cp = require('child_process');
 const Logger = require('logplease');
 const logger =  Logger.create('Job');
-
+const extensions = require('./extensions');
 let uid = 0;
 let gid = 0;
 
@@ -52,7 +52,7 @@ class Job {
     }
 
 
-    async prime(){
+    async  prime(){
 
         if (remaining_job_spaces < 1) {
             logger.log('awaiting job slot');
@@ -91,28 +91,70 @@ class Job {
     }
 
     async execute() {
-        return await new Promise((resolve, reject) => {
-            if (this.state !== STATES.PRIMED) {
-                reject({
-                    message: "Job needs to be in primed state.",
-                });
+        return await new Promise((resolve) => {
+            let prlimit = [
+                'prlimit',
+                '--nproc=' + config.max_process_count,
+                '--nofile=' + config.max_open_files,
+                '--fsize=' + config.max_file_size
+            ]
+
+            let timeout = [
+                'timeout',
+                '-s',
+                '9',
+                Math.ceil(config.run_timeout/1000),
+            ]
+
+            if (config.memory_limit > 0) {
+                prlimit.push('--as=' + config.memory_limit)
             }
 
-            let child = cp.spawn("python3", [path.join(this.dir, `${this.qid}.py`)]);
-            let stdout ="", stderr="";
-            child.stdout.on("data", (data) => {
-                stdout += data;
+            let proc_args = [
+                'nice',
+                ...timeout,
+                ...prlimit,
+                'bash',
+                path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
+                `${this.qid}.${extensions[this.runtime.language]}`,
+                ...this.args,
+            ]
+
+
+            let stdout="", stderr="";
+
+            let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
+                cwd: this.dir,
+                uid: this.uid,
+                gid: this.gid,
+                stdio: 'pipe',
+                detached: true,
             });
 
-            child.stderr.on("data", (data) => {
+            proc.stdin.on('data', (data) => {
+                proc.stdin.write(this.stdin);
+                proc.stdin.end();
+                proc.stdin.destroy();
+            });
+
+            proc.stderr.on('data', (data) => {
                 stderr += data;
             });
 
-            child.on('close', (code, signal) => {
-                let result = stdout || stderr;
-                resolve(result);
+            proc.stdout.on('data', (data) => {
+                stdout += data;
+            });
+
+            proc.on('close', (code, signal) => {
+                resolve({
+                    stdout: stdout,
+                    stderr: stderr,
+                    code: code,
+                    signal: signal,
+                });
             });
         });
+
     }
 
 

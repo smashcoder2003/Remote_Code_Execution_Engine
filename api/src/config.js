@@ -106,6 +106,11 @@ const options = {
         parser: parseInt,
         validators: [x => x > 0 || `${x} cannot be negative`],
     },
+    packages: {
+        desc: 'The directory for language environments',
+        default: './my_engine_data/packages',
+        validators: [x => fs.existsSync(x) || `The directory ${x} doesnt exist`]
+    }
 }
 
 

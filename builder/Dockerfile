@@ -1,10 +1,12 @@
-# Use the alpine:latest base image
-FROM alpine:latest
+# Use the ubuntu:latest base image
+FROM ubuntu:latest
 
 LABEL authors="bunty"
 
 # Install required packages
-RUN apk update && apk add --no-cache curl python3 nodejs npm
+RUN apt-get update && \
+    apt-get install -y curl python3 nodejs npm && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /engine_api
@@ -15,7 +17,8 @@ COPY ./package.json ./package-lock.json /engine_api/
 COPY ./my_engine_data/ ./my_engine_data
 
 # Install Node.js dependencies
-RUN npm install
+RUN npm install && \
+    chmod -R +x ./my_engine_data/packages
 
-# Set the command to run the Node.js application
+# Set the command to run.sh the Node.js application
 CMD node /engine_api/app.js
