@@ -1,5 +1,5 @@
 import fs from 'fs';
-
+console.time("MY_ENGINE");
 (async () => {
     const { default: fetchModule } = await import('node-fetch');
     const fetch = fetchModule;
@@ -10,7 +10,7 @@ import fs from 'fs';
 
     const fetchPromises = [];
 
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 200; i++) {
         fetchPromises.push(
             fetch(url, {
                 method: "POST",
@@ -29,8 +29,7 @@ import fs from 'fs';
 
     Promise.all(fetchPromises)
         .then(responses => {
-            responses.forEach(response => {
-                console.log(response);
-            });
+                console.log(responses);
+                console.timeEnd("MY_ENGINE")
         });
 })();

@@ -6,7 +6,7 @@ const config = require('./config');
 const cp = require('child_process');
 const Logger = require('logplease');
 const logger =  Logger.create('Job');
-const extensions = require('./extensions');
+const properties = require('./properties');
 let uid = 0;
 let gid = 0;
 
@@ -110,51 +110,82 @@ class Job {
                 prlimit.push('--as=' + config.memory_limit)
             }
 
+            let stdout="", stderr="", compiled_error = false;
+            let extension = properties[this.runtime.language].compiled ? properties[this.runtime.language].compiled_extension : properties[this.runtime.language].normal_extension
+
             let proc_args = [
                 'nice',
                 ...timeout,
                 ...prlimit,
                 'bash',
                 path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
-                `${this.qid}.${extensions[this.runtime.language]}`,
+                `${this.qid}.${extension}`,
                 ...this.args,
             ]
 
+            if (properties[this.runtime.language].compiled) {
+                let proc_args = [
+                    'nice',
+                    ...timeout,
+                    ...prlimit,
+                    'bash',
+                    path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
+                    `${this.qid}.${properties[this.runtime.language].normal_extension}`
+                ]
 
-            let stdout="", stderr="";
+                let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
+                    cwd: this.dir,
+                    uid: this.uid,
+                    gid: this.gid,
+                    stdio: 'pipe',
+                    detached: true,
+                });
 
-            let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
-                cwd: this.dir,
-                uid: this.uid,
-                gid: this.gid,
-                stdio: 'pipe',
-                detached: true,
-            });
+                proc.stderr.on('data', (data) => {
+                    compiled_error = true;
+                    stderr += data;
+                });
+            }
 
-            proc.stdin.on('data', (data) => {
-                proc.stdin.write(this.stdin);
-                proc.stdin.end();
-                proc.stdin.destroy();
-            });
+            if (!compiled_error) {
+                let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
+                    cwd: this.dir,
+                    uid: this.uid,
+                    gid: this.gid,
+                    stdio: 'pipe',
+                    detached: true,
+                });
 
-            proc.stderr.on('data', (data) => {
-                stderr += data;
-            });
+                proc.stdin.on('data', (data) => {
+                    proc.stdin.write(this.stdin);
+                    proc.stdin.end();
+                    proc.stdin.destroy();
+                });
 
-            proc.stdout.on('data', (data) => {
-                stdout += data;
-            });
+                proc.stderr.on('data', (data) => {
+                    stderr += data;
+                });
 
-            proc.on('close', (code, signal) => {
+                proc.stdout.on('data', (data) => {
+                    stdout += data;
+                });
+
+                proc.on('close', (code, signal) => {
+                    resolve({
+                        stdout: stdout,
+                        stderr: stderr,
+                        code: code,
+                        signal: signal,
+                    });
+                });
+
+            } else {
                 resolve({
                     stdout: stdout,
-                    stderr: stderr,
-                    code: code,
-                    signal: signal,
+                    stderr: stderr
                 });
-            });
+            }
         });
-
     }
 
 
