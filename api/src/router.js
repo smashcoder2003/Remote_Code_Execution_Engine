@@ -16,6 +16,10 @@ router.use((req, res, next) => {
     return next();
 });
 
+router.get('/codeeditor',(req, res) =>{
+    res.status(200).sendFile(path.join(__dirname, 'public', 'codeground.html'))
+})
+
 router.get('/styles.css', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'public', 'styles.css'));
 });
@@ -118,7 +122,7 @@ router.post('/execute', async (req, res) => {
     logger.log(`Executed job ${Job.uuid}`);
 
     logger.log(`Cleaning up Job ${Job.uuid} Files`);
-    // await Job.cleanup_job_files();
+    await Job.cleanup_job_files();
     logger.log(`Finished cleaning Job ${Job.uuid}`);
 
     res.status(200).send(result);

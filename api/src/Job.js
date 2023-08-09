@@ -89,7 +89,7 @@ class Job {
     }
 
     async execute() {
-        return await new Promise((resolve) => {
+        return await new Promise(async (resolve) => {
             let prlimit = [
                 'prlimit',
                 '--nproc=' + config.max_process_count,
@@ -101,14 +101,14 @@ class Job {
                 'timeout',
                 '-s',
                 '9',
-                Math.ceil(config.run_timeout/1000),
+                Math.ceil(config.run_timeout / 1000),
             ]
 
             if (config.memory_limit > 0) {
                 prlimit.push('--as=' + config.memory_limit)
             }
 
-            let stdout="", stderr="", compiled_error = false;
+            let stdout = "", stderr = "", compiled_error = false;
             let extension = properties[this.runtime.language].compiled ? properties[this.runtime.language].compiled_extension : properties[this.runtime.language].normal_extension
 
             let proc_args = [
@@ -123,32 +123,43 @@ class Job {
 
             if (properties[this.runtime.language].compiled) {
                 logger.log("Compiling Files");
-                let proc_comp = [
-                    'nice',
-                    ...timeout,
-                    ...prlimit,
-                    'bash',
-                    path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
-                    `${this.qid}.${properties[this.runtime.language].normal_extension}`,
-                    `${this.file.name}`,
-                ]
+                await new Promise((resolve) => {
+                    let proc_comp = [
+                        'nice',
+                        ...timeout,
+                        ...prlimit,
+                        'bash',
+                        path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
+                        `${this.qid}.${properties[this.runtime.language].normal_extension}`,
+                        `${this.file.name}`,
+                    ]
 
-                let proc = cp.spawn(proc_comp[0], proc_args.splice(1), {
-                    cwd: this.dir,
-                    uid: this.uid,
-                    gid: this.gid,
-                    stdio: 'pipe',
-                    detached: true,
+                    let compilation_process = cp.spawn(proc_comp[0], proc_comp.splice(1), {
+                        cwd: this.dir,
+                        uid: this.uid,
+                        gid: this.gid,
+                        stdio: 'pipe',
+                        detached: true,
+                    });
+
+                    compilation_process.stderr.on('data', (data) => {
+                        compiled_error = true;
+                        stderr += data;
+                    });
+
+                    compilation_process.on('close', (close) => {
+                            resolve();
+                    });
                 });
 
-                proc.stderr.on('data', (data) => {
-                    compiled_error = true;
-                    stderr += data;
-                });
-                logger.log("Compiled files");
             }
 
             if (!compiled_error) {
+
+                if (properties[this.runtime.language].compiled) {
+                    logger.log("Compiled files");
+                }
+
                 let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
                     cwd: this.dir,
                     uid: this.uid,
