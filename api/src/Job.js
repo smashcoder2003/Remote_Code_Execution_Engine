@@ -75,12 +75,10 @@ class Job {
         logger.log('Reading file content...');
         const file_content = Buffer.from(this.file.content, this.file.encoding);
         logger.log('Setting test path...');
-        const test_file_path = path.join(config.tests_dir, `${this.runtime.language}/${this.qid}.py`);
+        const test_file_path = path.join(config.tests_dir, `${this.runtime.language}/${this.qid}.${properties[this.runtime.language].normal_extension}`);
 
         const test_file_content = Buffer.from(await fs.readFile(test_file_path), 'utf8');
-        const job_test_path = path.join(this.dir, `${this.qid}.py`);
-
-
+        const job_test_path = path.join(this.dir, `${this.qid}.${properties[this.runtime.language].normal_extension}`);
         logger.log('Writing file contents... ');
         await fs.writeFile(file_path, file_content);
         await fs.writeFile(job_test_path, test_file_content);
@@ -124,16 +122,18 @@ class Job {
             ]
 
             if (properties[this.runtime.language].compiled) {
-                let proc_args = [
+                logger.log("Compiling Files");
+                let proc_comp = [
                     'nice',
                     ...timeout,
                     ...prlimit,
                     'bash',
                     path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
-                    `${this.qid}.${properties[this.runtime.language].normal_extension}`
+                    `${this.qid}.${properties[this.runtime.language].normal_extension}`,
+                    `${this.file.name}`,
                 ]
 
-                let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
+                let proc = cp.spawn(proc_comp[0], proc_args.splice(1), {
                     cwd: this.dir,
                     uid: this.uid,
                     gid: this.gid,
@@ -145,6 +145,7 @@ class Job {
                     compiled_error = true;
                     stderr += data;
                 });
+                logger.log("Compiled files");
             }
 
             if (!compiled_error) {

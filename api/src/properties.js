@@ -8,7 +8,6 @@ let properties = {
         compiled: false,
         normal_extension: 'py'
     }
-
 }
 
 module.exports = properties
