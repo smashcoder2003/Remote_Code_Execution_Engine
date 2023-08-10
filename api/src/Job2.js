@@ -21,7 +21,7 @@ let job_queue = [];
 let remaining_job_spaces = config.max_concurrent_jobs;
 
 // noinspection JSCheckFunctionSignatures
-class Job {
+class Job2 {
     constructor({ runtime, file, stdin, args, memory_limit, timeouts, qid }) {
         this.uuid = uuidv4();
         this.runtime = runtime;
@@ -71,20 +71,12 @@ class Job {
         logger.log('Iterating through files');
 
         logger.log('Setting file path... ');
-        const file_path = path.join(this.dir, this.file.name)
+        const file_path = path.join(this.dir, this.file.name);
         logger.log('Reading file content...');
         const file_content = Buffer.from(this.file.content, this.file.encoding);
-        logger.log('Setting test path...');
-        const test_file_path = path.join(config.tests_dir, `${this.runtime.language}/${this.qid}.${properties[this.runtime.language].normal_extension}`);
-
-        const test_file_content = Buffer.from(await fs.readFile(test_file_path), 'utf8');
-        const job_test_path = path.join(this.dir, `${this.qid}.${properties[this.runtime.language].normal_extension}`);
         logger.log('Writing file contents... ');
         await fs.writeFile(file_path, file_content);
-        await fs.writeFile(job_test_path, test_file_content);
         await fs.chown(file_path, this.uid, this.gid);
-        await fs.chown(test_file_path, this.uid, this.gid);
-
         this.state = STATES.PRIMED;
     }
 
@@ -111,16 +103,6 @@ class Job {
             let stdout = "", stderr = "", compiled_error = false;
             let extension = properties[this.runtime.language].compiled ? properties[this.runtime.language].compiled_extension : properties[this.runtime.language].normal_extension
 
-            let proc_args = [
-                'nice',
-                ...timeout,
-                ...prlimit,
-                'bash',
-                path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
-                `${this.qid}`,
-                ...this.args,
-            ]
-
             if (properties[this.runtime.language].compiled) {
                 logger.log("Compiling Files");
                 await new Promise((resolve) => {
@@ -130,7 +112,6 @@ class Job {
                         ...prlimit,
                         'bash',
                         path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
-                        `${this.qid}.${properties[this.runtime.language].normal_extension}`,
                         `${this.file.name}`,
                     ]
 
@@ -148,13 +129,25 @@ class Job {
                     });
 
                     compilation_process.on('close', (close) => {
-                            resolve();
+                        resolve();
                     });
                 });
 
             }
 
             if (!compiled_error) {
+                if (properties[this.runtime.language].compiled) {
+                    this.file.name = (this.file.name).slice(0, (this.file.name).length - extension.length);
+                }
+                let proc_args = [
+                    'nice',
+                    ...timeout,
+                    ...prlimit,
+                    'bash',
+                    path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
+                    `${this.file.name}`,
+                    ...this.args,
+                ]
 
                 if (properties[this.runtime.language].compiled) {
                     logger.log("Compiled files");
@@ -215,8 +208,8 @@ class Job {
             console.error(`Error cleaning up job files: ${error.message}`);
         }
     }
-
 }
+
 async  function removeDirectoryRecursive(dirPath) {
     if (fs1.existsSync(dirPath)) {
         const files = await fs.readdir(dirPath);
@@ -235,4 +228,5 @@ async  function removeDirectoryRecursive(dirPath) {
         await fs.rmdir(dirPath);
     }
 }
-module.exports = Job;
+
+module.exports = Job2;

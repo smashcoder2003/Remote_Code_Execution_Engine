@@ -4,7 +4,7 @@ const path = require('path');
 const Job = require('./Job');
 const Logger = require('logplease');
 const logger = Logger.create('Router');
-
+const Job2 = require('./Job2');
 
 
 router.use((req, res, next) => {
@@ -18,10 +18,6 @@ router.use((req, res, next) => {
 
 router.get('/codeeditor',(req, res) =>{
     res.status(200).sendFile(path.join(__dirname, 'public', 'codeground.html'))
-})
-
-router.get('/styles.css', (req, res) => {
-    res.status(200).sendFile(path.join(__dirname, 'public', 'styles.css'));
 });
 
 router.get('/', (req, res) => {
@@ -40,11 +36,7 @@ router.get('/runtimes', (req, res) => {
         ]
     })
 });
-
-
-
-
-function get_job(body) {
+function get_job(body, type) {
     let {
         language,
         version,
@@ -64,7 +56,7 @@ function get_job(body) {
                 message: "qid is required as a string",
             });
         }
-        
+
         if (!language) {
             reject({
                 message: "language is required as a string",
@@ -94,24 +86,39 @@ function get_job(body) {
             compile_timeout
         }
 
-        resolve(
-            new Job({
-            runtime,
-            file,
-            stdin,
-            args,
-            memory_limit,
-            timeouts,
-            qid,
-            })
-        );
+        if (type === 1) {
+            resolve(
+                new Job({
+                    runtime,
+                    file,
+                    stdin,
+                    args,
+                    memory_limit,
+                    timeouts,
+                    qid,
+                })
+            );
+        } else {
+            resolve(
+                new Job2({
+                    runtime,
+                    file,
+                    stdin,
+                    args,
+                    memory_limit,
+                    timeouts,
+                    qid,
+                })
+            );
+        }
     });
 }
 
 
+
 router.post('/execute', async (req, res) => {
     try {
-    const Job = await get_job(req.body);
+    const Job = await get_job(req.body, 1);
     logger.log(`Priming job ${Job.uuid}`);
 
     await Job.prime();
@@ -133,5 +140,30 @@ router.post('/execute', async (req, res) => {
     }
 
 })
+
+router.post('/run', async (req, res) => {
+    try {
+        const Job = await get_job(req.body, 2);
+        logger.log(`Priming job ${Job.uuid}`);
+
+        await Job.prime();
+        logger.log(`Primed job ${Job.uuid}`);
+
+        logger.log(`Executing job ${Job.uuid}`);
+        const result = await Job.execute();
+        logger.log(`Executed job ${Job.uuid}`);
+
+        logger.log(`Cleaning up Job ${Job.uuid} Files`);
+        await Job.cleanup_job_files();
+        logger.log(`Finished cleaning Job ${Job.uuid}`);
+
+        res.status(200).send(result);
+    }
+
+    catch(error) {
+        res.status(201).send(error);
+    }
+
+});
 
 module.exports = router;

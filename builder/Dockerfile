@@ -5,7 +5,7 @@ LABEL authors="bunty"
 
 # Install required packages
 RUN apt-get update && \
-    apt-get install -y curl python3 nodejs npm openjdk-11-jdk && \
+    apt-get install -y curl python3 python3-pip nodejs npm openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -15,10 +15,12 @@ WORKDIR /engine_api
 COPY ./api/src /engine_api
 COPY ./package.json ./package-lock.json /engine_api/
 COPY ./my_engine_data/ ./my_engine_data
+COPY ./public ./public
 
 # Install Node.js dependencies
 RUN npm install && \
     chmod -R +x ./my_engine_data/packages
 
+RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn 
 # Set the command to run.sh the Node.js application
 CMD node /engine_api/app.js

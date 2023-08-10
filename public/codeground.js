@@ -3,17 +3,17 @@ function generateoutput() {
    const version = selectedLanguage.split('-')[1] || "";
    const language = selectedLanguage.split('-')[0] || "";
    const codeContent = document.getElementById("codeInput").value;
-   const fileExtension = language === 'python'?'py':"";
+   const fileExtension = language === 'python'?'py':"java";
    
    const jsonObject = {
        "language": language,
        "version": version,
-       "files": [
+       "file":
            {
                "name": `solution.${fileExtension}`,
                "content": codeContent
            }
-       ],
+       ,
        "stdin": "",
        "args": [],
        "compile_timeout": 10000,
@@ -26,7 +26,7 @@ function generateoutput() {
 
     const jsonOutput = document.getElementById("jsonOutput");
 
-    let api_url = "http://localhost:2000/api/execute";
+    let api_url = "http://localhost:2000/api/run";
     console.log(JSON.stringify(jsonObject));
 
    fetch(api_url, {
