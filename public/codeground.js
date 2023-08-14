@@ -26,7 +26,7 @@ function generateoutput() {
 
     const jsonOutput = document.getElementById("jsonOutput");
 
-    let api_url = "http://localhost:2000/api/run";
+    let api_url = "http://192.168.130.1:2000/api/run";
     console.log(JSON.stringify(jsonObject));
 
    fetch(api_url, {
