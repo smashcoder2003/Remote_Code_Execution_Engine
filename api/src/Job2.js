@@ -116,7 +116,7 @@ class Job2 {
                     ]
 
                     let compilation_process = cp.spawn(proc_comp[0], proc_comp.splice(1), {
-                        cwd: this.dir,
+                        cwd: `${this.dir}`,
                         uid: this.uid,
                         gid: this.gid,
                         stdio: 'pipe',
@@ -139,6 +139,7 @@ class Job2 {
                 if (properties[this.runtime.language].compiled) {
                     this.file.name = (this.file.name).slice(0, (this.file.name).length - extension.length);
                 }
+
                 let proc_args = [
                     'nice',
                     ...timeout,

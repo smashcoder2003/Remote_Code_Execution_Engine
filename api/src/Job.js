@@ -117,7 +117,7 @@ class Job {
                 ...prlimit,
                 'bash',
                 path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
-                `${this.qid}`,
+                `${this.qid}.${properties[this.runtime.language]}.${extension}`,
                 ...this.args,
             ]
 
