@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required packages
 RUN apt-get update && \
-    apt-get install -y curl python3 python3-pip nodejs npm r-base && \
+    apt-get install -y curl python3 python3-pip nodejs npm r-base openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
