@@ -120,7 +120,7 @@ class Job {
                 `${this.qid}.${properties[this.runtime.language]}.${extension}`,
                 ...this.args,
             ]
-
+3
             if (properties[this.runtime.language].compiled) {
                 logger.log("Compiling Files");
                 await new Promise((resolve) => {
