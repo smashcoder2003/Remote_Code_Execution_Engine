@@ -1,9 +1,32 @@
+let properties = {
+    java : {
+        compiled: true,
+        normal_extension: 'java',
+        compiled_extension: 'class',
+        version: 'Jre11',
+    },
+    python: {
+        compiled: false,
+        normal_extension: 'py',
+        version:  '3.10',
+    },
+    r: {
+        compiled: false,
+        normal_extension: 'r',
+        version: '3.6+'
+    }
+}
+
 function generateoutput() {
    const selectedLanguage = document.getElementById("language").value;
    const version = selectedLanguage.split('-')[1] || "";
    const language = selectedLanguage.split('-')[0] || "";
    const codeContent = document.getElementById("codeInput").value;
-   const fileExtension = language === 'python'?'py':"java";
+   let fileExtension;
+   if (properties[language].compiled)
+       fileExtension = properties[language].compiled_extension;
+   else
+    fileExtension = properties[language].normal_extension;
    
    const jsonObject = {
        "language": language,
@@ -26,7 +49,7 @@ function generateoutput() {
 
     const jsonOutput = document.getElementById("jsonOutput");
 
-    let api_url = "http://192.168.130.1:2000/api/run";
+    let api_url = "http://localhost:2000/api/run";
     console.log(JSON.stringify(jsonObject));
 
    fetch(api_url, {

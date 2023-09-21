@@ -1,0 +1,16 @@
+{
+  "language": "r",
+  "version": "3.6+",
+  "file":
+  {
+    "name": "solution.py",
+    "content": "sayHello <- function(){\n   print('Hello World!')\n}\n\nsayHello()\n\n"
+  },
+  "stdin": "",
+  "args": [],
+  "compile_timeout": 10000,
+  "run_timeout": 3000,
+  "compile_memory_limit": -1,
+  "run_memory_limit": -1,
+  "qid": "qid1"
+}

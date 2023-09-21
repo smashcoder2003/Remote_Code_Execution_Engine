@@ -1,6 +1,6 @@
 {
-  "name": "restfull",
-  "version": "1.0.0",
+  "name": "icodemark13",
+  "version": "1.0.2",
   "description": "Creating an restfull api using express",
   "main": "api/src/app.js",
   "scripts": {
