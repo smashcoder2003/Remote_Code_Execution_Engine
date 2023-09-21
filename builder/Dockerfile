@@ -3,9 +3,11 @@ FROM ubuntu:latest
 
 LABEL authors="bunty"
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install required packages
 RUN apt-get update && \
-    apt-get install -y curl python3 python3-pip nodejs npm openjdk-11-jdk && \
+    apt-get install -y curl python3 python3-pip nodejs npm r-base && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -21,6 +23,10 @@ COPY ./public ./public
 RUN npm install && \
     chmod -R +x ./my_engine_data/packages
 
-RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn 
+RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn
+
+# Install the R package 'runit'
+RUN R -e "install.packages('runit', dependencies=TRUE, repos='https://cran.rstudio.com/')"
+
 # Set the command to run.sh the Node.js application
 CMD node /engine_api/app.js
