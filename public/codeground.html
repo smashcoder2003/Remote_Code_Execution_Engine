@@ -35,14 +35,16 @@
     <label for="language">Select a language:</label>
     <select id="language">
         <option value="python-3.9.4">Python 3</option>
-        <option value="java-JRE11"> Java</option>
+<!--        <option value="java-JRE11"> Java</option>-->
+        <option value="r-3.6+">R_programming</option>
     </select>
     <button onclick="generateoutput()">Run</button>
     <h2>JSON Output:</h2>
     <textarea id="jsonOutput" rows="10" cols="80" readonly></textarea>
 
-    <script src="/codeground.js" defer>
-        
-    </script>
+<!--    <script type="module" src="/properties.js"></script>-->
+
+    <!-- Include codeground.js as a module -->
+    <script type="module" src="/codeground.js"></script>
 </body>
 </html>
