@@ -1,13 +1,13 @@
 # Use the ubuntu:latest base image
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 LABEL authors="bunty"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required packages
-RUN apt-get update && \
-    apt-get install -y curl python3 python3-pip nodejs npm r-base openjdk-11-jdk && \
+RUN apt update && \
+    apt install -y curl python3 python3-pip nodejs npm r-base&& \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -26,7 +26,7 @@ RUN npm install && \
 RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn
 
 # Install the R package 'runit'
-RUN R -e "install.packages('runit', dependencies=TRUE, repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages('RUnit', dependencies=TRUE, repos='https://cran.rstudio.com/')"
 
 # Set the command to run.sh the Node.js application
 CMD node /engine_api/app.js
