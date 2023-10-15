@@ -4,6 +4,12 @@ const logger = Logger.create('Config');
 
 
 const options = {
+    output_dir: {
+      desc: 'Where the output.txt is stored for each language',
+      default: './my_engine_data/Outputs',
+      validators: [x => fs.existsSync(x) || "output_dir doesn't exist"],
+    },
+
     tests_dir: {
         desc: 'Tests for questions',
         default: './my_engine_data/Tests',
