@@ -1,7 +1,7 @@
 library('RUnit')
 source('solution.r')
 
-dataSet = read.csv("../dataSets/CarWale_dataset")
+dataSet = read.csv("../../Datasets/Cancer_dataset/incd.csv")
 
 test.slr <- function() {
     checkEquals(dataSet, slr(dataSet))

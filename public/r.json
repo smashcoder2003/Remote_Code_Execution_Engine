@@ -3,8 +3,8 @@
   "version": "3.6+",
   "file":
   {
-    "name": "solution.py",
-    "content": "sayHello <- function(){\n   print('Hello World!')\n}\n\nsayHello()\n\n"
+    "name": "solution.r",
+    "content": "slr <- function (dataset) {\n    return(dataset);\n}\n\n"
   },
   "stdin": "",
   "args": [],
