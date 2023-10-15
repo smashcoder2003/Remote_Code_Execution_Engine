@@ -22,11 +22,7 @@ function generateoutput() {
    const version = selectedLanguage.split('-')[1] || "";
    const language = selectedLanguage.split('-')[0] || "";
    const codeContent = document.getElementById("codeInput").value;
-   let fileExtension;
-   if (properties[language].compiled)
-       fileExtension = properties[language].compiled_extension;
-   else
-    fileExtension = properties[language].normal_extension;
+   let fileExtension = properties[language].normal_extension;
    
    const jsonObject = {
        "language": language,
