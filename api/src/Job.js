@@ -120,7 +120,7 @@ class Job {
                 `${this.qid}.${extension}`,
                 ...this.args,
             ]
-3
+
             if (properties[this.runtime.language].compiled) {
                 logger.log("Compiling Files");
                 await new Promise((resolve) => {
@@ -183,23 +183,59 @@ class Job {
                 });
 
                 proc.on('close', (code, signal) => {
-                    resolve({
-                        stdout: stdout,
-                        stderr: stderr,
-                        code: code,
-                        signal: signal,
-                    });
+                    let validatedOutput = this.validateOutput(stdout || stderr, `${config.output_dir}/Languages/${this.runtime.language}/${this.qid}.txt`)
+                    resolve(
+                        validatedOutput
+                    );
                 });
 
             } else {
                 resolve({
                     stdout: stdout,
-                    stderr: stderr
+                    stderr: stderr,
+                    compilationError: true
                 });
             }
         });
     }
 
+    async validateOutput(result, validatorFile) {
+        let testsPassed = 0;
+
+        return await new Promise((resolve) => {
+            let testCases = fs1.readFileSync(validatorFile, 'utf8');
+            testCases = testCases.split('\n');
+            result = result.split('\n');
+            let noOfTests = testCases.length
+
+
+            for (let i = 0; i < noOfTests; i++) {
+                if (testCases[i] === result[i])
+                    ++testsPassed;
+
+                else
+                {
+                    let output = result[i];
+                    let expected = testCases[i];
+                    resolve({
+                        "testsPassed": testsPassed,
+                        'score': testsPassed,
+                        'totalTests': noOfTests,
+                        'passed': false,
+                        'output': output,
+                        'expected': expected
+                    })
+                }
+            }
+
+            resolve({
+                'testsPassed': testsPassed,
+                'score': testsPassed,
+                'totalTests': noOfTests,
+                'passed': true,
+            })
+        })
+    }
 
     async  cleanup_job_files() {
         try {
