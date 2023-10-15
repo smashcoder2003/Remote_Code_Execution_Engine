@@ -23,7 +23,7 @@ COPY ./public ./public
 RUN npm install && \
     chmod -R +x ./my_engine_data/packages
 
-RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn
+#RUN pip3 install numpy scipy pandas seaborn matplotlib scikit-learn
 
 # Install the R package 'runit'
 RUN R -e "install.packages('RUnit', dependencies=TRUE, repos='https://cran.rstudio.com/')"
