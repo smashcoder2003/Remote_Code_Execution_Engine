@@ -184,7 +184,7 @@ class Job {
 
                 proc.on('close', (code, signal) => {
                     let validatedOutput = this.validateOutput(stdout || stderr, `${config.output_dir}/Languages/${this.runtime.language}/${this.qid}.txt`)
-                    resolve(
+                    resolve (
                         validatedOutput
                     );
                 });
