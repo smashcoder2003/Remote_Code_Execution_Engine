@@ -4,7 +4,7 @@
    "file":
        {
            "name": "test.r",
-           "content": ""
+           "content": "print('hi')"
        },
    "stdin": "",
    "args": [],

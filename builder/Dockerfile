@@ -18,6 +18,7 @@ COPY ./api/src /engine_api
 COPY ./package.json ./package-lock.json /engine_api/
 COPY ./my_engine_data/ ./my_engine_data
 COPY ./public ./public
+COPY ./build ./build
 
 # Install Node.js dependencies
 RUN npm install && \

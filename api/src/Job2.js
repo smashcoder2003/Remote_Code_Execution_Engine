@@ -177,7 +177,7 @@ class Job2 {
                 });
 
                 proc.on('close', (code, signal) => {
-                    resolve({
+                    resolve ({
                         stdout: stdout,
                         stderr: stderr,
                         code: code,
