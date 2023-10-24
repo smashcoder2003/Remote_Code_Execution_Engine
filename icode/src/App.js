@@ -15,22 +15,25 @@ const AuthContextProvider = ({ children }) => {
     const [loggedIn, setLoggedIn]  = useState(() => null);
     const [user, setUser] = useState(() => null);
 
-
-
-
-    useEffect(() => {
-        const checkLoginState = () => {
-            (async () => {
-                const { signedIn, userName} = await axios.get(`${process.env.NODE_SERVER_URL}/api/logged_in`);
+    const checkLoginState = () => {
+        (async () => {
+            try {
+                const { signedIn, userName } = await axios.get(`/api/logged_in`);
                 signedIn && setLoggedIn(signedIn);
                 userName && setUser(userName);
-            })();
-        }
+            } catch (err) {
+                console.log(err);
+            }
+        })();
+    }
+
+    useEffect(() => {
+
         checkLoginState();
-    }, [])
+    }, [loggedIn, checkLoginState]);
 
     return (
-        <AuthContext.Provider value={ [loggedIn, setLoggedIn, user] }>
+        <AuthContext.Provider value={ [loggedIn, setLoggedIn, user, checkLoginState] }>
             {children}
         </AuthContext.Provider>
     );
