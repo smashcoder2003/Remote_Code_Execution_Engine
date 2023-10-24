@@ -1,5 +1,38 @@
-export default function Login({signingUp}) {
-    if (signingUp) {
+import axios from 'axios';
+import {useContext, useEffect} from "react";
+import { AuthContext } from '../../App';
+
+
+export default function Login({ signingUp }) {
+    const [loggedIn, setLoggedIn, setUser, checkLoginState] = useContext(AuthContext);
+    function handleLogin() {
+        const user = document.getElementById("email").value;
+        const pass = document.getElementById("password").value;
+        (async () => {
+            console.log(user);
+            const result = await axios.post(`http://localhost:2000/api/login`, {
+                userName: user,
+                password: pass
+            }, {headers: { 'Content-Type': 'Application/json' }});
+            if (result.data["loggedIn"]) {
+                setLoggedIn(true);
+                setUser(result.data.userName);
+            }
+        })();
+        checkLoginState();
+    }
+
+    useEffect(() => {
+        console.log("Rendered Component");
+    }, [loggedIn]);
+
+    if (signingUp && loggedIn) {
+        return(
+            <div className="text-2xl">You are already logged In.</div>
+        );
+    }
+
+    if (signingUp && !loggedIn) {
         return (
             <>
                 <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
@@ -8,11 +41,11 @@ export default function Login({signingUp}) {
                     </div>
 
                     <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                        <form className="space-y-6" action="#" method="POST">
+                        <div className="space-y-6">
                             <div>
                                 <label form="email" className="block text-sm font-medium leading-6 text-gray-900">Email address</label>
                                 <div className="mt-2">
-                                    <input id="email" name="email" type="email" autoComplete="email" required className="block  px-1.5 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                                    <input id="email" name="email" type="name" autoComplete="email" required className="block  px-1.5 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
                                 </div>
                             </div>
 
@@ -29,9 +62,9 @@ export default function Login({signingUp}) {
                             </div>
 
                             <div>
-                                <button type="submit" className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
+                                <button onClick={handleLogin} type="submit" className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </>
