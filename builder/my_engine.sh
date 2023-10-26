@@ -2,8 +2,9 @@
 
 build() {
   if docker images | grep -q "my_engine"; then
-    docker stop my_engine
+    docker stop my_engine > /dev/null
     docker rm my_engine > /dev/null
+    docker rmi my_engine > /dev/null
   fi
   docker build -t my_engine -f "./builder/Dockerfile" . --no-cache
 }

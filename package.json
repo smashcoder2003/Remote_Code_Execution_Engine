@@ -1,6 +1,6 @@
 {
-  "name": "restfull",
-  "version": "1.0.0",
+  "name": "icodemark13",
+  "version": "1.0.2",
   "description": "Creating an restfull api using express",
   "main": "api/src/app.js",
   "scripts": {
@@ -9,12 +9,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^6.8.1",
+    "jest-mock-axios": "^4.7.3",
+    "jsonwebtoken": "^8.0.0",
     "logplease": "^1.2.15",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.1",
+    "path": "^0.12.7",
+    "pg": "^8.11.3",
     "uuid": "^8.3.2"
   }
 }

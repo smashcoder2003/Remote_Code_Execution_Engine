@@ -1,0 +1,16 @@
+{
+  "language": "java",
+  "version": "11",
+  "file":
+  {
+    "name": "main.java",
+    "content": "public class main { public static void main(String[] args) { System.out.println(\"Hello Java World! \"); } }"
+  },
+  "stdin": "",
+  "args": [],
+  "compile_timeout": 10000,
+  "run_timeout": 3000,
+  "compile_memory_limit": -1,
+  "run_memory_limit": -1,
+  "qid": "qid1"
+}

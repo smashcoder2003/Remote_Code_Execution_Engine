@@ -6,7 +6,7 @@ const config = require('./config');
 const cp = require('child_process');
 const Logger = require('logplease');
 const logger =  Logger.create('Job');
-
+const properties = require('./properties');
 let uid = 0;
 let gid = 0;
 
@@ -52,7 +52,7 @@ class Job {
     }
 
 
-    async prime(){
+    async  prime(){
 
         if (remaining_job_spaces < 1) {
             logger.log('awaiting job slot');
@@ -75,12 +75,10 @@ class Job {
         logger.log('Reading file content...');
         const file_content = Buffer.from(this.file.content, this.file.encoding);
         logger.log('Setting test path...');
-        const test_file_path = path.join(config.tests_dir, `${this.runtime.language}/${this.qid}.py`);
+        const test_file_path = path.join(config.tests_dir, `${this.runtime.language}/${this.qid}.${properties[this.runtime.language].normal_extension}`);
 
         const test_file_content = Buffer.from(await fs.readFile(test_file_path), 'utf8');
-        const job_test_path = path.join(this.dir, `${this.qid}.py`);
-
-
+        const job_test_path = path.join(this.dir, `${this.qid}.${properties[this.runtime.language].normal_extension}`);
         logger.log('Writing file contents... ');
         await fs.writeFile(file_path, file_content);
         await fs.writeFile(job_test_path, test_file_content);
@@ -91,30 +89,153 @@ class Job {
     }
 
     async execute() {
-        return await new Promise((resolve, reject) => {
-            if (this.state !== STATES.PRIMED) {
-                reject({
-                    message: "Job needs to be in primed state.",
-                });
+        return await new Promise(async (resolve) => {
+            let prlimit = [
+                'prlimit',
+                '--nproc=' + config.max_process_count,
+                '--nofile=' + config.max_open_files,
+                '--fsize=' + config.max_file_size
+            ]
+
+            let timeout = [
+                'timeout',
+                '-s',
+                '9',
+                Math.ceil(config.run_timeout / 1000),
+            ]
+
+            if (config.memory_limit > 0) {
+                prlimit.push('--as=' + config.memory_limit)
             }
 
-            let child = cp.spawn("python3", [path.join(this.dir, `${this.qid}.py`)]);
-            let stdout ="", stderr="";
-            child.stdout.on("data", (data) => {
-                stdout += data;
-            });
+            let stdout = "", stderr = "", compiled_error = false;
+            let extension = properties[this.runtime.language].compiled ? properties[this.runtime.language].compiled_extension : properties[this.runtime.language].normal_extension
 
-            child.stderr.on("data", (data) => {
-                stderr += data;
-            });
+            let proc_args = [
+                'nice',
+                ...timeout,
+                ...prlimit,
+                'bash',
+                path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'run'),
+                `${this.qid}.${extension}`,
+                ...this.args,
+            ]
 
-            child.on('close', (code, signal) => {
-                let result = stdout || stderr;
-                resolve(result);
-            });
+            if (properties[this.runtime.language].compiled) {
+                logger.log("Compiling Files");
+                await new Promise((resolve) => {
+                    let proc_comp = [
+                        'nice',
+                        ...timeout,
+                        ...prlimit,
+                        'bash',
+                        path.join('/engine_api/my_engine_data/packages', this.runtime.language, 'compile'),
+                        `${this.qid}.${properties[this.runtime.language].normal_extension}`,
+                        `${this.file.name}`,
+                    ]
+
+                    let compilation_process = cp.spawn(proc_comp[0], proc_comp.splice(1), {
+                        cwd: this.dir,
+                        uid: this.uid,
+                        gid: this.gid,
+                        stdio: 'pipe',
+                        detached: true,
+                    });
+
+                    compilation_process.stderr.on('data', (data) => {
+                        compiled_error = true;
+                        stderr += data;
+                    });
+
+                    compilation_process.on('close', (close) => {
+                            resolve();
+                    });
+                });
+
+            }
+
+            if (!compiled_error) {
+
+                if (properties[this.runtime.language].compiled) {
+                    logger.log("Compiled files");
+                }
+
+                let proc = cp.spawn(proc_args[0], proc_args.splice(1), {
+                    cwd: this.dir,
+                    uid: this.uid,
+                    gid: this.gid,
+                    stdio: 'pipe',
+                    detached: true,
+                });
+
+                proc.stdin.on('data', (data) => {
+                    proc.stdin.write(this.stdin);
+                    proc.stdin.end();
+                    proc.stdin.destroy();
+                });
+
+                proc.stderr.on('data', (data) => {
+                    stderr += data;
+                });
+
+                proc.stdout.on('data', (data) => {
+                    stdout += data;
+                });
+
+                proc.on('close', (code, signal) => {
+                    let validatedOutput = this.validateOutput(stdout || stderr, `${config.output_dir}/Languages/${this.runtime.language}/${this.qid}.txt`)
+                    resolve (
+                        validatedOutput
+                    );
+                });
+
+            } else {
+                resolve({
+                    stdout: stdout,
+                    stderr: stderr,
+                    compilationError: true
+                });
+            }
         });
     }
 
+    async validateOutput(result, validatorFile) {
+        let testsPassed = 0;
+
+        return await new Promise((resolve) => {
+            let testCases = fs1.readFileSync(validatorFile, 'utf8');
+            testCases = testCases.split('\n');
+            result = result.split('\n');
+            let noOfTests = testCases.length
+
+
+            for (let i = 0; i < noOfTests; i++) {
+                if (testCases[i] === result[i])
+                    ++testsPassed;
+
+                else
+                {
+                    let output = result[i];
+                    let expected = testCases[i];
+                    resolve({
+                        "testsPassed": testsPassed,
+                        'score': testsPassed,
+                        'totalTests': noOfTests,
+                        'passed': false,
+                        'output': output,
+                        'expected': expected
+                    })
+                }
+            }
+
+            resolve({
+                'testsPassed': testsPassed,
+                'score': testsPassed,
+                'totalTests': noOfTests,
+                'passed': true,
+            })
+        })
+    }
 
     async  cleanup_job_files() {
         try {
