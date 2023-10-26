@@ -18,7 +18,7 @@ COPY ./api/src /engine_api
 COPY ./package.json ./package-lock.json /engine_api/
 COPY ./my_engine_data/ ./my_engine_data
 COPY ./public ./public
-COPY ./build ./build
+COPY ./.env ./.env
 
 # Install Node.js dependencies
 RUN npm install && \
@@ -28,6 +28,5 @@ RUN npm install && \
 
 # Install the R package 'runit'
 RUN R -e "install.packages('RUnit', dependencies=TRUE, repos='https://cran.rstudio.com/')"
-
 # Set the command to run.sh the Node.js application
-CMD node /engine_api/app.js
+CMD node  /engine_api/app.js
