@@ -1,34 +1,37 @@
 import axios from 'axios';
 import {useContext, useEffect} from "react";
 import { AuthContext } from '../../App';
-
+// import {logger} from 'log-please';
 
 export default function Login({ signingUp }) {
-    const [loggedIn, setLoggedIn, setUser, checkLoginState] = useContext(AuthContext);
+
+    const { loggedIn, setLoggedIn, setUser, checkLoginState }  = useContext(AuthContext);
+
+
     function handleLogin() {
         const user = document.getElementById("email").value;
         const pass = document.getElementById("password").value;
+        let result;
         (async () => {
-            console.log(user);
-            const result = await axios.post(`http://localhost:2000/api/login`, {
+            //
+             result = await axios.post(`http://localhost:2000/api/login`, {
                 userName: user,
                 password: pass
-            }, {headers: { 'Content-Type': 'Application/json' }});
+            }, { headers: { 'Content-Type': 'Application/json' }});
+             // Added log of result data
             if (result.data["loggedIn"]) {
+                // Check whether loggedIn is actually updating
+                await axios.get('http://localhost:2000/database/generate_assignments');
                 setLoggedIn(true);
-                setUser(result.data.userName);
+                setUser(result.data.user);
+                checkLoginState();
             }
         })();
-        checkLoginState();
     }
-
-    useEffect(() => {
-        console.log("Rendered Component");
-    }, [loggedIn]);
 
     if (signingUp && loggedIn) {
         return(
-            <div className="text-2xl">You are already logged In.</div>
+            <div className="text-2xl">You are logged In.</div>
         );
     }
 
