@@ -1,3 +1,5 @@
+// noinspection JSValidateTypes
+
 import AceEditor from "react-ace";
 import React,{useContext,useEffect, useState, useLayoutEffect } from "react";
 import "ace-builds/src-noconflict/mode-java";
@@ -6,6 +8,7 @@ import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { useParams } from "react-router-dom";
 import { AuthContext } from "../../App";
+import '../../index.css';
 
 
 function findQuestion(object, qid) {
@@ -21,6 +24,8 @@ function CodeGround() {
     let { qid }  = useParams();
     const { loggedIn } = useContext(AuthContext);
     const [ question , setQuestion ] = useState(() => null);
+    const [ userCode , setUserCode ] = useState(() => null);
+    const [userResult, setUserResult] = useState(() => null);
 
     useEffect(() => {
         if (!question && loggedIn) {
@@ -33,7 +38,6 @@ function CodeGround() {
                                     .then(response => {
                                         if (response.ok) {
                                             response.json() .then((data) => {
-                                                console.log(data);
                                                 setQuestion(findQuestion(data["assignments"], qid));
                                             })
                                         }
@@ -47,11 +51,46 @@ function CodeGround() {
                 console.log('err', err.message);
             }
         }
-
-    }, [loggedIn, question]);
+    }, [question, userResult]);
 
 
     if (loggedIn && question) {
+
+        function submitUserCode(typeOfSubmission) {
+            const codeJson = {
+                "language": "r",
+                "version": "3.6+",
+                "file":
+                    {
+                        "name": "solution.r",
+                        "content": `${userCode}`
+                    },
+                "stdin": "",
+                "args": [],
+                "compile_timeout": 10000,
+                "run_timeout": 3000,
+                "compile_memory_limit": -1,
+                "run_memory_limit": -1,
+                "qid": qid
+            }
+
+            fetch(typeOfSubmission ?'http://localhost:2000/api/execute':'http://localhost:2000/api/run', {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify(codeJson)
+            }) .then((response) => {
+                if (response.ok) {
+                    response.json() .then((data) => {
+                        setUserResult(data);
+                        return 0;
+                    });
+                }
+            });
+        }
+
+
         return (
             <>
                 <div className="flex flex-col sm:flex-row gap-x-7 m-4 ">
@@ -63,16 +102,16 @@ function CodeGround() {
                         </div>
 
                         <div className= "m-2 w-[100%]">
-                            <CodeEditor question={ question }/>
+                            <CodeEditor question={ question } userCode={userCode} setUserCode={setUserCode}/>
                         </div>
 
                         <div className= "flex flex-row gap-x-3 items-center justify-center">
                             <div className="submit font-mono bg-gray-300 text-black dark:text-white dark:bg-gray-600 dark:hover:bg-gray-700 hover:text-white hover:cursor-pointer hover:bg-gray-600 rounded-3xl m-2 p-2">
-                                <a href="#">Submit</a>
+                                <button onClick={() => submitUserCode(1)}>Submit</button>
                             </div>
 
                             <div className="submit font-mono bg-gray-300 text-black dark:text-white dark:textwhite dark:bg-gray-600 dark:hover:bg-gray-700 hover:text-white hover:cursor-pointer hover:bg-gray-600 rounded-3xl m-1 p-2">
-                                <a href="#">Run</a>
+                                <button onClick={() => submitUserCode(0)}>Run</button>
                             </div>
                         </div>
 
@@ -83,10 +122,18 @@ function CodeGround() {
                                 </svg>
                                 <p className="font-mono text-black dark:text-gray-200">TestCases</p>
                             </div>
-                            <div className= "flex flex-col w-[100%] m-2 dark:text-white text-black font-mono">
-                                <p>Tests Passed: 10</p>
-                                <p> Total Tests: 20</p>
-                            </div>
+                            {  userResult? <div className= "flex flex-col w-[100%] m-2 dark:text-white text-black font-mono">
+                                { !userResult['passed'] ?
+                                    <>
+                                        <p>Output: {userResult['output']}</p>
+                                        <p>Expected: {userResult['expected']}</p>
+                                    </> : <></>
+                                }
+                                <p>TotalTests: {userResult["totalTests"]}</p>
+                                <p>Tests Passed: {userResult['testsPassed']}</p>
+                                <p>Score: {userResult['score']}</p>
+
+                            </div>: <div></div>}
                         </div>
                     </div>
                 </div>
@@ -103,10 +150,12 @@ function CodeGround() {
     }
 
     if (loggedIn && !question) {
-        return <div>Loading...</div>
+
+        return (
+            <div> Please Login</div>
+        )
     }
 }
-
 
 
 function QuestionFrame({ question }) {
@@ -138,12 +187,12 @@ function QuestionFrame({ question }) {
 }
 
 
-function CodeEditor({ question }) {
-    useEffect(() => {
 
-    }, [question]);
+function CodeEditor({ question, userCode, setUserCode }) {
+    if (!userCode) {
+        setUserCode(question['value']);
+    }
 
-    console.log(question['value']);
     if (question) {
         return (
             <>
@@ -155,15 +204,18 @@ function CodeEditor({ question }) {
                     fontSize= {13}
                     width={"100%"}
                     height={"500px"}
-                    value={ question["value"] }
+                    value={ userCode }
                     style={{borderRadius: "7px"}}
-
+                    onChange={(e) => {
+                        setUserCode(e);
+                    }}
                 />
             </>
         )
     }
     return <> Loading...</>;
 }
+
 
 
 export default CodeGround;
