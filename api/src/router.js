@@ -22,7 +22,11 @@ router.get('/logged_in', async (req, res) => {
     try {
         const token = req.cookies.token;
         logger.log('Extracted Cookie');
-        if (!token) res.json({ loggedIn: false });
+
+        if (!token) {
+            res.status(200).json({loggedIn: false});
+            return;
+        }
         const { user } = jwt.verify(token, process.env.TOKEN_SECRET);
         logger.log("verified Cookie");
         const newToken = jwt.sign({ user }, process.env.TOKEN_SECRET, { expiresIn: 3600000 });

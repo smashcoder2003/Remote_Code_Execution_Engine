@@ -5,12 +5,13 @@ const logger = Logger.create('DataBaseAPI');
 require('dotenv/config');
 const  randomQidList  = require('../utils/shuffleQuestions');
 const jwt = require('jsonwebtoken');
+
 const pool = new Pool({
     user: process.env.POSTGRESQL_USER_NAME,
     password: process.env.POSTGRESQL_PASSWORD,
     database: process.env.POSTGRESQL_DATABASE,
     port: process.env.POSTGRESQL_PORT,
-    host: process.env.POSTGRESQL_HOST
+    host: process.env.POSTGRESQL_HOST,
 });
 
 logger.log("Successfully pool connection");
@@ -20,7 +21,7 @@ router.post('/questions', async (req, res) => {
         logger.log('Formatting Assignment request');
         let assignments = req.body.assignments.map(assignment => `'${assignment}'`).join(', ');
         logger.log('Formatted Assignments request');
-        const result  = await pool.query(`SELECT * FROM questions where qid IN (${assignments});`);
+        const result  = await pool.query(`SELECT * FROM questions WHERE qid IN (${assignments});`);
         res.status(200).json({ assignments: result.rows });
     } catch (err) {
        console.log(err.message);
