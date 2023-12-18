@@ -5,6 +5,8 @@ const logger = Logger.create('DataBaseAPI');
 require('dotenv/config');
 const  randomQidList  = require('../utils/shuffleQuestions');
 const jwt = require('jsonwebtoken');
+
+
 const pool = new Pool({
     user: process.env.POSTGRESQL_USER_NAME,
     password: process.env.POSTGRESQL_PASSWORD,
